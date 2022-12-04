@@ -282,11 +282,11 @@ class Exp_Informer(Exp_Basic):
         output_df = pd.DataFrame(output_data_list, columns=output_column_list)
 
         # result save
-        folder_path = './results/' + setting +'/'
+        folder_path = os.path.join('results', setting)
         if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+            os.makedirs(folder_path, exist_ok=True)
 
-        output_df.to_csv(folder_path+'County_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month_predictions.csv')
+        output_df.to_csv(os.path.join(folder_path, 'predictions.csv'))
 
         preds = np.array(preds)
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
@@ -296,7 +296,7 @@ class Exp_Informer(Exp_Basic):
         # if not os.path.exists(folder_path):
         #     os.makedirs(folder_path)
         
-        np.save(folder_path+'real_prediction.npy', preds)
+        np.save(os.path.join(folder_path,'real_prediction.npy'), preds)
         
         return
 
