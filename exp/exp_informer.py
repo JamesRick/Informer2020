@@ -1,11 +1,13 @@
-from data.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_Pred
+from data.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_Pred, Dataset_Zillow, Dataset_Zillow_Pred
 from exp.exp_basic import Exp_Basic
 from models.model import Informer, InformerStack
 
 from utils.tools import EarlyStopping, adjust_learning_rate
 from utils.metrics import metric
 
+import pdb
 import numpy as np
+import pandas as pd
 
 import torch
 import torch.nn as nn
@@ -69,6 +71,7 @@ class Exp_Informer(Exp_Basic):
             'ECL':Dataset_Custom,
             'Solar':Dataset_Custom,
             'custom':Dataset_Custom,
+            'zillow':Dataset_Zillow,
         }
         Data = data_dict[self.args.data]
         timeenc = 0 if args.embed!='timeF' else 1
@@ -78,6 +81,8 @@ class Exp_Informer(Exp_Basic):
         elif flag=='pred':
             shuffle_flag = False; drop_last = False; batch_size = 1; freq=args.detail_freq
             Data = Dataset_Pred
+            if self.args.data == 'zillow':
+                Data = Dataset_Zillow_Pred
         else:
             shuffle_flag = True; drop_last = True; batch_size = args.batch_size; freq=args.freq
         data_set = Data(
@@ -229,7 +234,7 @@ class Exp_Informer(Exp_Basic):
 
     def predict(self, setting, load=False):
         pred_data, pred_loader = self._get_data(flag='pred')
-        
+
         if load:
             path = os.path.join(self.args.checkpoints, setting)
             best_model_path = path+'/'+'checkpoint.pth'
@@ -238,19 +243,51 @@ class Exp_Informer(Exp_Basic):
         self.model.eval()
         
         preds = []
+        pred_dict = {}.fromkeys(pred_data.cols, None)
+        for key in pred_data.cols:
+            pred_dict[key] = []
         
-        for i, (batch_x,batch_y,batch_x_mark,batch_y_mark) in enumerate(pred_loader):
+        for i, (batch_x,batch_y,batch_x_mark,batch_y_mark, date_idx_arr, county_idx_arr) in enumerate(pred_loader):
+
+            if (i+1) % 100==0 or i == 0:
+                print(f"{i+1} / {len(pred_data)}", flush=True)
+
             pred, true = self._process_one_batch(
                 pred_data, batch_x, batch_y, batch_x_mark, batch_y_mark)
-            preds.append(pred.detach().cpu().numpy())
+            pred_vals = pred.detach().cpu().numpy()
+            true_vals = true.detach().cpu().numpy()
+            preds.append(pred_vals)
 
-        preds = np.array(preds)
-        preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
-        
+            date = pred_data.df_raw.loc[date_idx_arr.tolist()[0][0][0], "date"]
+            county = pred_data.cols[county_idx_arr.tolist()[0][0][0]]
+
+            cur_pred_list = [i, date, np.around(pred_data.inverse_transform(pred_vals), 2)]
+            pred_dict[county].append(cur_pred_list)
+
+        output_column_list = ["index", "County", "Date"]
+        output_column_list += [f"Pred_{i+1}" for i in range(pred_data.pred_len)]
+        output_data_list = []
+        for county_key in pred_dict:
+            for i in range(len(pred_dict[county_key])):
+                cur_output = [pred_dict[county_key][i][0], county_key, pred_dict[county_key][i][1]] \
+                            + pred_dict[county_key][i][2].flatten().tolist()
+                output_data_list.append(cur_output)
+        output_df = pd.DataFrame(output_data_list, columns=output_column_list)
+
         # result save
         folder_path = './results/' + setting +'/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
+
+        output_df.to_csv(folder_path+'County_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month_predictions.csv')
+
+        preds = np.array(preds)
+        preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
+
+        # # result save
+        # folder_path = './results/' + setting +'/'
+        # if not os.path.exists(folder_path):
+        #     os.makedirs(folder_path)
         
         np.save(folder_path+'real_prediction.npy', preds)
         

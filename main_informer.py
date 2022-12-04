@@ -1,6 +1,7 @@
 import argparse
 import os
 import torch
+import pdb
 
 from exp.exp_informer import Exp_Informer
 
@@ -58,6 +59,8 @@ parser.add_argument('--gpu', type=int, default=0, help='gpu')
 parser.add_argument('--use_multi_gpu', action='store_true', help='use multiple gpus', default=False)
 parser.add_argument('--devices', type=str, default='0,1,2,3',help='device ids of multile gpus')
 
+parser.add_argument('--predict_only', default=False, action="store_true", help='Only predict.')
+
 args = parser.parse_args()
 
 args.use_gpu = True if torch.cuda.is_available() and args.use_gpu else False
@@ -76,6 +79,8 @@ data_parser = {
     'WTH':{'data':'WTH.csv','T':'WetBulbCelsius','M':[12,12,12],'S':[1,1,1],'MS':[12,12,1]},
     'ECL':{'data':'ECL.csv','T':'MT_320','M':[321,321,321],'S':[1,1,1],'MS':[321,321,1]},
     'Solar':{'data':'solar_AL.csv','T':'POWER_136','M':[137,137,137],'S':[1,1,1],'MS':[137,137,1]},
+
+    'zillow': {'data': 'ml_dataset.csv', 'T':'Fulton', 'M':[7,7,7], 'S':[1,1,1], 'MS':[7,7,1]}
 }
 if args.data in data_parser.keys():
     data_info = data_parser[args.data]
@@ -92,7 +97,29 @@ print(args)
 
 Exp = Exp_Informer
 
-for ii in range(args.itr):
+if not args.predict_only:
+    for ii in range(args.itr):
+        # setting record of experiments
+        setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(args.model, args.data, args.features, 
+                    args.seq_len, args.label_len, args.pred_len,
+                    args.d_model, args.n_heads, args.e_layers, args.d_layers, args.d_ff, args.attn, args.factor, 
+                    args.embed, args.distil, args.mix, args.des, ii)
+
+        exp = Exp(args) # set experiments
+        print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+        exp.train(setting)
+        
+        print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+        exp.test(setting)
+
+        if args.do_predict:
+            print('>>>>>>>predicting : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+            exp.predict(setting, True)
+
+        torch.cuda.empty_cache()
+else:
+    ii = args.itr - 1
+
     # setting record of experiments
     setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(args.model, args.data, args.features, 
                 args.seq_len, args.label_len, args.pred_len,
@@ -100,14 +127,6 @@ for ii in range(args.itr):
                 args.embed, args.distil, args.mix, args.des, ii)
 
     exp = Exp(args) # set experiments
-    print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-    exp.train(setting)
-    
-    print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-    exp.test(setting)
 
-    if args.do_predict:
-        print('>>>>>>>predicting : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        exp.predict(setting, True)
-
-    torch.cuda.empty_cache()
+    print('>>>>>>>predicting : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+    exp.predict(setting, True)
