@@ -80,7 +80,13 @@ data_parser = {
     'ECL':{'data':'ECL.csv','T':'MT_320','M':[321,321,321],'S':[1,1,1],'MS':[321,321,1]},
     'Solar':{'data':'solar_AL.csv','T':'POWER_136','M':[137,137,137],'S':[1,1,1],'MS':[137,137,1]},
 
-    'zillow': {'data': 'ml_dataset.csv', 'T':'Fulton', 'M':[7,7,7], 'S':[1,1,1], 'MS':[7,7,1]}
+    # Target T isn't used in our data_loader, so I just set it to Fulton.
+    'zillow': {'data': 'County_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month_ml_dataset.csv', 'T':'Fulton', 'M':[7,7,7], 'S':[1,1,1], 'MS':[7,7,1]},
+    'zillow_all_sm_sa_month': {'data': 'County_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month_ml_dataset.csv', 'T':'Fulton', 'M':[7,7,7], 'S':[1,1,1], 'MS':[7,7,1]},
+    'zillow_bdrmcnt_2_uc_sfrcondo': {'data': 'County_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month_ml_dataset.csv', 'T':'Fulton', 'M':[7,7,7], 'S':[1,1,1], 'MS':[7,7,1]},
+    'zillow_condo_sm_sa_month': {'data': 'County_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month_ml_dataset.csv', 'T':'Fulton', 'M':[7,7,7], 'S':[1,1,1], 'MS':[7,7,1]},
+    'zillow_sfr_sm_sa_month': {'data': 'County_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month_ml_dataset.csv', 'T':'Fulton', 'M':[7,7,7], 'S':[1,1,1], 'MS':[7,7,1]},
+    'zillow_zori_sm_sa_month': {'data': 'County_zori_sm_sa_month_ml_dataset.csv', 'T':'Fulton', 'M':[7,7,7], 'S':[1,1,1], 'MS':[7,7,1]},
 }
 if args.data in data_parser.keys():
     data_info = data_parser[args.data]

@@ -72,6 +72,11 @@ class Exp_Informer(Exp_Basic):
             'Solar':Dataset_Custom,
             'custom':Dataset_Custom,
             'zillow':Dataset_Zillow,
+            'zillow_all_sm_sa_month':Dataset_Zillow,
+            'zillow_bdrmcnt_2_uc_sfrcondo':Dataset_Zillow,
+            'zillow_condo_sm_sa_month':Dataset_Zillow,
+            'zillow_sfr_sm_sa_month':Dataset_Zillow,
+            'zillow_zori_sm_sa_month':Dataset_Zillow,
         }
         Data = data_dict[self.args.data]
         timeenc = 0 if args.embed!='timeF' else 1
@@ -81,7 +86,9 @@ class Exp_Informer(Exp_Basic):
         elif flag=='pred':
             shuffle_flag = False; drop_last = False; batch_size = 1; freq=args.detail_freq
             Data = Dataset_Pred
-            if self.args.data == 'zillow':
+            if self.args.data in ['zillow', 'zillow_all_sm_sa_month', 
+                                    'zillow_bdrmcnt_2_uc_sfrcondo', 'zillow_condo_sm_sa_month', 
+                                    'zillow_sfr_sm_sa_month', 'zillow_zori_sm_sa_month']:
                 Data = Dataset_Zillow_Pred
         else:
             shuffle_flag = True; drop_last = True; batch_size = args.batch_size; freq=args.freq
