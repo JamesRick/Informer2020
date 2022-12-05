@@ -419,7 +419,7 @@ class Dataset_Zillow(Dataset):
         df_raw.columns: ['date', ...(other features), target feature]
         '''
         # cols = list(df_raw.columns); 
-        cols = [
+        self.cols = [
             'Fulton', 'Gwinnett', 'Cobb', 'Dekalb', 'Chatham', 'Clayton', 
             'Cherokee', 'Forsyth', 'Henry', 'Richmond', 'Hall', 'Muscogee', 'Paulding',
             'Houston', 'Bibb', 'Columbia', 'Douglas', 'Coweta', 'Clarke', 'Carroll', 
@@ -442,10 +442,13 @@ class Dataset_Zillow(Dataset):
             'Quitman', 'Taliaferro'
         ]
 
+        self.valid_cols = df_raw.drop(columns="date").keys().values
         self.total_len = 0
         self.index_dict = {}
         self.index_county_map = {}
-        for key in cols:
+        for key in self.cols:
+            if key not in self.valid_cols:
+                continue
             cur_raw_df = df_raw.loc[:, ["date", key]]
             cur_raw_df.loc[:, "date"] = pd.to_datetime(cur_raw_df.loc[:, "date"])
             cur_len = cur_raw_df.dropna().shape[0] - self.seq_len - self.pred_len
@@ -477,7 +480,7 @@ class Dataset_Zillow(Dataset):
 
         if self.scale:
             scaler_data = None
-            for key in cols:
+            for key in self.cols:
                 if key in self.index_dict:
                     if scaler_data is None:
                         scaler_data = np.array(self.index_dict[key][0].values)
@@ -487,7 +490,7 @@ class Dataset_Zillow(Dataset):
                         break
                     scaler_data = np.concatenate((scaler_data, self.index_dict[key][0].values))
             self.scaler.fit(scaler_data)
-            for key in cols:
+            for key in self.cols:
                 if key in self.index_dict:
                     self.index_dict[key][0] = self.scaler.transform(self.index_dict[key][0])
 
@@ -583,10 +586,13 @@ class Dataset_Zillow_Pred(Dataset):
             'Calhoun', 'Talbot', 'Stewart', 'Miller', 'Warren', 'Schley', 'Echols', 'Baker', 'Glascock', 'Clay', 'Webster', 
             'Quitman', 'Taliaferro'
         ]
+        self.valid_cols = df_raw.drop(columns="date").keys().values
         self.total_len = 0
         self.index_dict = {}
         self.index_county_map = {}
         for key in self.cols:
+            if key not in self.valid_cols:
+                continue
             # if key == "Glynn":
             #     pdb.set_trace()
             cur_raw_df = df_raw.loc[:, ["date", key]]
