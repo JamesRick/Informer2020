@@ -443,6 +443,8 @@ class Dataset_Zillow(Dataset):
         ]
 
         self.valid_cols = df_raw.drop(columns="date").keys().values
+        if "zori" in self.root_path:
+            self.valid_cols = df_raw.drop(columns=["date", "Hall"]).keys().values
         self.total_len = 0
         self.index_dict = {}
         self.index_county_map = {}
@@ -587,6 +589,8 @@ class Dataset_Zillow_Pred(Dataset):
             'Quitman', 'Taliaferro'
         ]
         self.valid_cols = df_raw.drop(columns="date").keys().values
+        if "zori" in self.root_path:
+            self.valid_cols = df_raw.drop(columns=["date", "Hall"]).keys().values
         self.total_len = 0
         self.index_dict = {}
         self.index_county_map = {}
