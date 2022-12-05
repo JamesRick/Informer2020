@@ -111,6 +111,10 @@ if not args.predict_only:
                     args.d_model, args.n_heads, args.e_layers, args.d_layers, args.d_ff, args.attn, args.factor, 
                     args.embed, args.distil, args.mix, args.des, ii)
 
+        if "zillow" in args.data:
+            setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_{}'.format(args.model, args.data, args.features, 
+                        args.seq_len, args.label_len, args.pred_len, ii)
+
         exp = Exp(args) # set experiments
         print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
         exp.train(setting)
@@ -131,6 +135,10 @@ else:
                 args.seq_len, args.label_len, args.pred_len,
                 args.d_model, args.n_heads, args.e_layers, args.d_layers, args.d_ff, args.attn, args.factor, 
                 args.embed, args.distil, args.mix, args.des, ii)
+
+    if "zillow" in args.data:
+        setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_{}'.format(args.model, args.data, args.features, 
+                    args.seq_len, args.label_len, args.pred_len, ii)
 
     exp = Exp(args) # set experiments
 
